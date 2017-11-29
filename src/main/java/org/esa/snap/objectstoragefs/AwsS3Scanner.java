@@ -39,7 +39,7 @@ class AwsS3Scanner implements ObjectStorageScanner {
             if (params.length() > 0) {
                 systemId += "?" + params;
             }
-            //System.out.println("systemId = " + systemId);
+            System.out.println("systemId = " + systemId);
             try {
                 xmlReader.parse(systemId);
             } catch (SAXException e) {

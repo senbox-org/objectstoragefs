@@ -1,43 +1,43 @@
 package org.esa.snap.objectstoragefs;
 
-import org.junit.AfterClass;
-import org.junit.BeforeClass;
+import org.junit.After;
+import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
-import java.io.InputStream;
-import java.net.HttpURLConnection;
 import java.net.URI;
-import java.net.URL;
 import java.nio.ByteBuffer;
 import java.nio.channels.SeekableByteChannel;
 import java.nio.file.*;
 import java.nio.file.spi.FileSystemProvider;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.Map;
+import java.util.*;
 
 import static org.junit.Assert.*;
 
-public class AwsS3FileSystemProviderTest {
+public abstract class AwsS3FileSystemTest {
 
-    private static final String BUCKET = "http://sentinel-s2-l1c.s3.amazonaws.com";
-    private static final String S3_BUCKET = "s3:" + BUCKET;
+    private FileSystem fs;
 
-    private static FileSystem fs;
+    abstract String getAddress();
 
-    @BeforeClass
-    public static void setUp() throws Exception {
-        Map<String, ?> env = new HashMap<>();
-        fs = FileSystems.newFileSystem(new URI(S3_BUCKET), env);
+    @Before
+    public void setUp() throws Exception {
+        Map<String, String> env = new HashMap<>();
+        env.put("delimiter", "/");
+        URI uri = new URI("s3:" + getAddress());
+        fs = FileSystems.newFileSystem(uri, env);
         assertNotNull(fs);
-        assertEquals("/", fs.getSeparator());
     }
 
-    @AfterClass
-    public static void tearDown() throws Exception {
+    @After
+    public void tearDown() throws Exception {
+        assertNotNull(fs);
         fs.close();
+    }
+
+    @Test
+    public void testSeparator() throws Exception {
+        assertEquals("/", fs.getSeparator());
     }
 
     @Test
@@ -54,8 +54,7 @@ public class AwsS3FileSystemProviderTest {
     @Test
     public void testNewDirectoryStream() throws Exception {
         FileSystemProvider provider = fs.provider();
-
-        Path path = provider.getPath(new URI(S3_BUCKET));
+        Path path = fs.getPath("/");
         DirectoryStream<Path> stream = provider.newDirectoryStream(path, p -> true);
         Iterator<Path> iterator = stream.iterator();
         assertTrue(iterator.hasNext());
@@ -64,7 +63,7 @@ public class AwsS3FileSystemProviderTest {
         assertEquals("/tiles/", iterator.next().toString());
         assertFalse(iterator.hasNext());
 
-        path = provider.getPath(new URI(S3_BUCKET + "/products/"));
+        path = fs.getPath("/products/");
         stream = provider.newDirectoryStream(path, p -> true);
         iterator = stream.iterator();
         assertTrue(iterator.hasNext());
@@ -79,14 +78,13 @@ public class AwsS3FileSystemProviderTest {
     @Test
     public void testByteChannel() throws Exception {
         FileSystemProvider provider = fs.provider();
-
-        Path path = Paths.get(new URI(S3_BUCKET + "/tiles/1/C/CV/2015/12/21/0/preview.jpg"));
+        Path path = fs.getPath("/tiles/1/C/CV/2015/12/25/0/preview.jpg");
         HashSet<OpenOption> openOptions = new HashSet<>();
         openOptions.add(StandardOpenOption.READ);
         SeekableByteChannel channel = provider.newByteChannel(path, openOptions);
 
         assertNotNull(channel);
-        assertEquals(113837, channel.size());
+        assertEquals(116665, channel.size());
 
         ByteBuffer buffer = ByteBuffer.wrap(new byte[(int) channel.size()]);
         int numRead = channel.read(buffer);
@@ -95,44 +93,20 @@ public class AwsS3FileSystemProviderTest {
 
     @Test
     public void testPathsGet() throws Exception {
-        Path path = Paths.get(new URI(S3_BUCKET + "/tiles/1/C/CV/2015/12/21/0/preview.jpg"));
+        Path path = fs.getPath("/tiles/1/C/CV/2015/12/25/0/preview.jpg");
         assertNotNull(path);
-        assertEquals("/tiles/1/C/CV/2015/12/21/0/preview.jpg", path.toString());
+        assertEquals("/tiles/1/C/CV/2015/12/25/0/preview.jpg", path.toString());
     }
 
     @Ignore
     @Test
     public void testFilesWalk() throws Exception {
-        Path path = Paths.get(new URI(S3_BUCKET + "/tiles/"));
-
+        Path path = fs.getPath("/tiles/");
         Iterator<Path> iterator = Files.walk(path).iterator();
         while (iterator.hasNext()) {
             Path next = iterator.next();
             System.out.println("next = " + next + ", abs=" + path.isAbsolute());
         }
-    }
-
-    @Test
-    public void testGET() throws Exception {
-        URL url = new URL(BUCKET + "/tiles/1/C/CV/2015/12/21/0/preview.jpg");
-        HttpURLConnection connection = (HttpURLConnection) url.openConnection();
-        connection.setRequestMethod("GET");
-        connection.setDoInput(true);
-        connection.connect();
-
-        int responseCode = connection.getResponseCode();
-        String responseMessage = connection.getResponseMessage();
-
-        System.out.println("responseCode = " + responseCode);
-        System.out.println("responseMessage = " + responseMessage);
-
-        InputStream stream = connection.getInputStream();
-        byte[] b = new byte[1024 * 1024];
-        int read = stream.read(b);
-        assertTrue(read > 0);
-        //ReadableByteChannel channel = Channels.newChannel(stream);
-
-        connection.disconnect();
     }
 
 }

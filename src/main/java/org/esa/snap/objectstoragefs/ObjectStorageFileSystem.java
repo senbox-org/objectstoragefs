@@ -225,7 +225,10 @@ public class ObjectStorageFileSystem extends FileSystem {
     Iterable<Path> getDirectories(Path dir) {
         Path path = dir.toAbsolutePath();
         String prefix = path.toString().substring(1);
-        List<ObjectStorageItemRef> objectStorageItemRefs = null;
+        if (prefix.isEmpty()) {
+            //prefix = getSeparator();
+        }
+        List<ObjectStorageItemRef> objectStorageItemRefs;
         try {
             objectStorageItemRefs = provider.createObjectStorageScanner().scan(address, getSeparator(), prefix);
         } catch (IOException e) {
