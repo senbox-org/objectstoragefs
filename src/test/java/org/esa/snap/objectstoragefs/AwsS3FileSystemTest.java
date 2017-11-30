@@ -20,7 +20,7 @@ import static org.junit.Assert.*;
 
 public abstract class AwsS3FileSystemTest {
 
-    private FileSystem fs;
+    private ObjectStorageFileSystem fs;
 
     abstract String getAddress();
 
@@ -29,8 +29,10 @@ public abstract class AwsS3FileSystemTest {
         Map<String, String> env = new HashMap<>();
         env.put("delimiter", "/");
         URI uri = new URI("s3:" + getAddress());
-        fs = FileSystems.newFileSystem(uri, env);
+        FileSystem fs = FileSystems.newFileSystem(uri, env);
         assertNotNull(fs);
+        assertTrue(fs instanceof ObjectStorageFileSystem);
+        this.fs = (ObjectStorageFileSystem) fs;
     }
 
     @After
@@ -77,6 +79,25 @@ public abstract class AwsS3FileSystemTest {
         assertTrue(iterator.hasNext());
         assertEquals("/products/2017/", iterator.next().toString());
         assertFalse(iterator.hasNext());
+    }
+    
+    @Test
+    public void testClose() throws Exception {
+        FileSystemProvider provider = fs.provider();
+        HashSet<OpenOption> openOptions = new HashSet<>();
+        openOptions.add(StandardOpenOption.READ);
+        SeekableByteChannel channel1 = provider.newByteChannel(fs.getPath("/tiles/1/C/CV/2015/12/25/0/preview.jpg"), openOptions);
+        SeekableByteChannel channel2 = provider.newByteChannel(fs.getPath("/tiles/1/C/CV/2015/12/25/0/preview.jpg"), openOptions);
+        SeekableByteChannel channel3 = provider.newByteChannel(fs.getPath("/tiles/1/C/CV/2015/12/25/0/preview.jpg"), openOptions);
+        assertTrue(fs.isOpen());
+        assertTrue(channel1.isOpen());
+        assertTrue(channel2.isOpen());
+        assertTrue(channel3.isOpen());
+        fs.close();
+        assertFalse(fs.isOpen());
+        assertFalse(channel1.isOpen());
+        assertFalse(channel2.isOpen());
+        assertFalse(channel3.isOpen());
     }
 
     @Test

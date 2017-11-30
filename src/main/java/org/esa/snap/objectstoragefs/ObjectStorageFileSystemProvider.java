@@ -200,7 +200,6 @@ public abstract class ObjectStorageFileSystemProvider extends FileSystemProvider
                 throw new FileSystemNotFoundException(fsUri.toString());
             }
         }
-
         String pathName = fileSystem.getSeparator() + (i >= 0 ? ssp.substring(i + 1) : "");
         return ObjectStoragePath.parsePath(fileSystem, pathName);
     }
@@ -234,7 +233,8 @@ public abstract class ObjectStorageFileSystemProvider extends FileSystemProvider
      */
     @Override
     public SeekableByteChannel newByteChannel(Path path, Set<? extends OpenOption> options, FileAttribute<?>[] attrs) throws IOException {
-        return new ObjectStorageByteChannel((ObjectStoragePath) path);
+        ObjectStorageFileSystem fs = (ObjectStorageFileSystem) path.getFileSystem();
+        return fs.openByteChannel((ObjectStoragePath) path, options, attrs);
     }
 
     /**

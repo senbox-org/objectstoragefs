@@ -16,6 +16,7 @@ import java.nio.channels.SeekableByteChannel;
  */
 class ObjectStorageByteChannel implements SeekableByteChannel {
 
+    private final ObjectStoragePath path;
     private final URL url;
     private final long contentLength;
     private final String contentType;
@@ -27,8 +28,9 @@ class ObjectStorageByteChannel implements SeekableByteChannel {
         this(path, 1024 * 16);
     }
 
-    ObjectStorageByteChannel(ObjectStoragePath path, int bufferSize) throws IOException {
-        url = new URL(path.getLocation());
+    private ObjectStorageByteChannel(ObjectStoragePath path, int bufferSize) throws IOException {
+        this.path = path;
+        this.url = new URL(path.getLocation());
         this.connection = connect();
         this.contentLength = connection.getContentLengthLong();
         this.contentType = connection.getContentType();
@@ -117,6 +119,7 @@ class ObjectStorageByteChannel implements SeekableByteChannel {
     public void close() throws IOException {
         connection.disconnect();
         connection = null;
+        ((ObjectStorageFileSystem)path.getFileSystem()).removeByteChannel(this);
     }
 
     /**
