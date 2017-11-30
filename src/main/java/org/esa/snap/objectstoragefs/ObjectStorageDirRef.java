@@ -1,9 +1,9 @@
 package org.esa.snap.objectstoragefs;
 
-class ObjectStorageDirRef implements ObjectStorageItemRef {
+public class ObjectStorageDirRef implements ObjectStorageItemRef {
     private final String prefix;
 
-    ObjectStorageDirRef(String prefix) {
+    public ObjectStorageDirRef(String prefix) {
         this.prefix = prefix;
     }
 

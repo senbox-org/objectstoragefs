@@ -1,4 +1,4 @@
-package org.esa.snap.objectstoragefs;
+package org.esa.snap.objectstoragefs.aws;
 
 import org.eclipse.jetty.server.Request;
 import org.eclipse.jetty.server.Server;
@@ -10,14 +10,14 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.*;
 
-public class AwsS3RestApiMock {
+public class S3RestApiMock {
 
     private Server server;
     private Map<String, File> files = new HashMap<>();
     private long nextRequestId = new Random().nextLong();
 
     public static void main(String[] args) throws Exception {
-        AwsS3RestApiMock mock = new AwsS3RestApiMock();
+        S3RestApiMock mock = new S3RestApiMock();
         mock.start(8080);
         mock.server.join();
     }

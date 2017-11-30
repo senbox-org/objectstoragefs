@@ -1,5 +1,6 @@
-package org.esa.snap.objectstoragefs;
+package org.esa.snap.objectstoragefs.aws;
 
+import org.esa.snap.objectstoragefs.ObjectStorageItemRef;
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -9,15 +10,15 @@ import java.util.List;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-public class AwsS3FileSystemLocalTest extends AwsS3FileSystemTest {
+public class S3FileSystemLocalTest extends S3FileSystemTest {
 
     private static final int PORT = 8080;
     private static final String ADDRESS = "http://localhost:" + PORT;
-    private static AwsS3RestApiMock apiMock;
+    private static S3RestApiMock apiMock;
 
     @BeforeClass
     public static void setUpClass() throws Exception {
-        apiMock = new AwsS3RestApiMock();
+        apiMock = new S3RestApiMock();
         apiMock.start(PORT);
     }
 
@@ -35,7 +36,7 @@ public class AwsS3FileSystemLocalTest extends AwsS3FileSystemTest {
     public void testScanner() throws Exception {
         List<ObjectStorageItemRef> items;
 
-        items = new AwsS3Scanner().scan(getAddress(), "/", "");
+        items = new S3Scanner().scan(getAddress(), "/", "");
         assertEquals(4, items.size());
         assertEquals("index.html", items.get(0).getPathName());
         assertTrue(items.get(0).isFile());
@@ -46,7 +47,7 @@ public class AwsS3FileSystemLocalTest extends AwsS3FileSystemTest {
         assertEquals("tiles/", items.get(3).getPathName());
         assertTrue(items.get(3).isDirectory());
 
-        items = new AwsS3Scanner().scan(getAddress(), "/", "products/");
+        items = new S3Scanner().scan(getAddress(), "/", "products/");
         assertEquals(3, items.size());
         assertEquals("products/2015/", items.get(0).getPathName());
         assertTrue(items.get(0).isDirectory());
@@ -55,7 +56,7 @@ public class AwsS3FileSystemLocalTest extends AwsS3FileSystemTest {
         assertEquals("products/2017/", items.get(2).getPathName());
         assertTrue(items.get(2).isDirectory());
 
-        items = new AwsS3Scanner().scan(getAddress(), "/", "tiles/");
+        items = new S3Scanner().scan(getAddress(), "/", "tiles/");
         assertEquals(3, items.size());
         assertEquals("tiles/1/", items.get(0).getPathName());
         assertTrue(items.get(0).isDirectory());

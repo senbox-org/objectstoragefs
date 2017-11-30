@@ -1,5 +1,6 @@
-package org.esa.snap.objectstoragefs;
+package org.esa.snap.objectstoragefs.aws;
 
+import org.esa.snap.objectstoragefs.ObjectStorageItemRef;
 import org.junit.Test;
 
 import java.io.InputStream;
@@ -10,7 +11,7 @@ import java.util.List;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-public class AwsS3FileSystemRemoteTest extends AwsS3FileSystemTest {
+public class S3FileSystemRemoteTest extends S3FileSystemTest {
 
     private final static String ADDRESS = "http://sentinel-s2-l1c.s3.amazonaws.com";
 
@@ -23,13 +24,13 @@ public class AwsS3FileSystemRemoteTest extends AwsS3FileSystemTest {
     public void testScanner() throws Exception {
         List<ObjectStorageItemRef> items;
 
-        items = new AwsS3Scanner().scan(getAddress(), "/", "");
+        items = new S3Scanner().scan(getAddress(), "/", "");
         assertEquals(7, items.size());
 
-        items = new AwsS3Scanner().scan(getAddress(), "/", "products/");
+        items = new S3Scanner().scan(getAddress(), "/", "products/");
         assertEquals(3, items.size());
 
-        items = new AwsS3Scanner().scan(getAddress(), "/", "tiles/");
+        items = new S3Scanner().scan(getAddress(), "/", "tiles/");
         assertEquals(60, items.size());
     }
 

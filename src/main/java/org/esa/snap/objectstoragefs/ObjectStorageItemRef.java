@@ -1,6 +1,6 @@
 package org.esa.snap.objectstoragefs;
 
-interface ObjectStorageItemRef {
+public interface ObjectStorageItemRef {
     String getPathName();
 
     boolean isDirectory();

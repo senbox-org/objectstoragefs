@@ -1,5 +1,7 @@
-package org.esa.snap.objectstoragefs;
+package org.esa.snap.objectstoragefs.aws;
 
+import org.esa.snap.objectstoragefs.ObjectStorageItemRef;
+import org.esa.snap.objectstoragefs.ObjectStorageScanner;
 import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
 
@@ -11,11 +13,11 @@ import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
 
-class AwsS3Scanner implements ObjectStorageScanner {
+class S3Scanner implements ObjectStorageScanner {
 
     private XMLReader xmlReader;
 
-    public AwsS3Scanner() throws ParserConfigurationException, SAXException {
+    S3Scanner() throws ParserConfigurationException, SAXException {
         SAXParserFactory spf = SAXParserFactory.newInstance();
         spf.setNamespaceAware(true);
         SAXParser saxParser = spf.newSAXParser();
@@ -39,9 +41,9 @@ class AwsS3Scanner implements ObjectStorageScanner {
 
         ArrayList<ObjectStorageItemRef> items = new ArrayList<>();
         String nextContinuationToken = null;
-        XmlResponseHandler handler;
+        S3ResponseHandler handler;
         do {
-            handler = new XmlResponseHandler(items);
+            handler = new S3ResponseHandler(items);
             xmlReader.setContentHandler(handler);
             StringBuffer params = new StringBuffer(paramBase);
             addParam(params, "continuation-token", nextContinuationToken);

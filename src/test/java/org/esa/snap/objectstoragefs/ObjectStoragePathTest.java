@@ -6,6 +6,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import java.net.URI;
+import java.nio.file.FileSystem;
 import java.nio.file.FileSystems;
 import java.nio.file.Path;
 import java.util.HashMap;
@@ -18,12 +19,16 @@ import static org.junit.Assert.*;
  */
 public class ObjectStoragePathTest {
 
+    private static final String FS_ID = "test:" + ObjectStoragePathTest.class.getName();
     private static ObjectStorageFileSystem fs;
 
     @BeforeClass
     public static void setUp() throws Exception {
         Map<String, ?> env = new HashMap<>();
-        fs = (ObjectStorageFileSystem) FileSystems.newFileSystem(new URI("test:bibo"), env);
+        FileSystem fs = FileSystems.newFileSystem(new URI(FS_ID), env);
+        assertNotNull(fs);
+        assertTrue(fs instanceof ObjectStorageFileSystem);
+        ObjectStoragePathTest.fs = (ObjectStorageFileSystem) fs;
     }
 
     @AfterClass

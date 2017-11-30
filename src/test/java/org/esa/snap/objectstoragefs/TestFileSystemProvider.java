@@ -1,9 +1,11 @@
 package org.esa.snap.objectstoragefs;
 
+import org.esa.snap.objectstoragefs.aws.S3FileSystemProvider;
+
 import java.io.IOException;
 import java.util.Map;
 
-public class TestFileSystemProvider extends AwsS3FileSystemProvider {
+public class TestFileSystemProvider extends S3FileSystemProvider {
     /**
      * Returns the URI scheme that identifies this provider.
      *
@@ -15,7 +17,7 @@ public class TestFileSystemProvider extends AwsS3FileSystemProvider {
     }
 
     @Override
-    ObjectStorageFileSystem createFileSystem(String address, Map<String, ?> env) throws IOException {
+    protected ObjectStorageFileSystem createFileSystem(String address, Map<String, ?> env) throws IOException {
         Object delimiter = env.get("delimiter");
         return new ObjectStorageFileSystem(this,
                                            address,

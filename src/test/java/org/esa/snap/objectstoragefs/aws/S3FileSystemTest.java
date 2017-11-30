@@ -1,5 +1,6 @@
-package org.esa.snap.objectstoragefs;
+package org.esa.snap.objectstoragefs.aws;
 
+import org.esa.snap.objectstoragefs.ObjectStorageFileSystem;
 import org.junit.After;
 import org.junit.Before;
 import org.junit.Ignore;
@@ -18,7 +19,7 @@ import java.util.Map;
 
 import static org.junit.Assert.*;
 
-public abstract class AwsS3FileSystemTest {
+public abstract class S3FileSystemTest {
 
     private ObjectStorageFileSystem fs;
 
@@ -80,7 +81,7 @@ public abstract class AwsS3FileSystemTest {
         assertEquals("/products/2017/", iterator.next().toString());
         assertFalse(iterator.hasNext());
     }
-    
+
     @Test
     public void testClose() throws Exception {
         FileSystemProvider provider = fs.provider();
@@ -150,7 +151,7 @@ public abstract class AwsS3FileSystemTest {
         assertEquals("/tiles/1/C/CV/2015/12/25/0/preview.jpg", path.toString());
     }
 
-    @Ignore
+    //@Ignore
     @Test
     public void testFilesWalk() throws Exception {
         Path path = fs.getPath("/tiles/");

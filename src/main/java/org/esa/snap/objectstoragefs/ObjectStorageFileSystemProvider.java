@@ -56,7 +56,9 @@ public abstract class ObjectStorageFileSystemProvider extends FileSystemProvider
         this.fileSystems = new HashMap<>();
     }
 
-    abstract ObjectStorageScanner createObjectStorageScanner();
+    protected abstract ObjectStorageFileSystem createFileSystem(String address, Map<String, ?> env) throws IOException;
+
+    protected abstract ObjectStorageScanner createObjectStorageScanner();
 
     /**
      * Constructs a new {@code FileSystem} object identified by a URI. This
@@ -102,7 +104,6 @@ public abstract class ObjectStorageFileSystemProvider extends FileSystemProvider
         return fileSystem;
     }
 
-    abstract ObjectStorageFileSystem createFileSystem(String address, Map<String, ?> env) throws IOException;
 
     /**
      * Returns an existing {@code FileSystem} created by this provider.

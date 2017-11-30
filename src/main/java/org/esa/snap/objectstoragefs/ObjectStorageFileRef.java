@@ -1,11 +1,11 @@
 package org.esa.snap.objectstoragefs;
 
-class ObjectStorageFileRef implements ObjectStorageItemRef {
+public class ObjectStorageFileRef implements ObjectStorageItemRef {
     private final String key;
     private final long size;
     private final String lastModified;
 
-    ObjectStorageFileRef(String key, long size, String lastModified) {
+    public ObjectStorageFileRef(String key, long size, String lastModified) {
         this.key = key;
         this.size = size;
         this.lastModified = lastModified;

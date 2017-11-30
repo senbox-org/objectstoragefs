@@ -1,5 +1,8 @@
-package org.esa.snap.objectstoragefs;
+package org.esa.snap.objectstoragefs.aws;
 
+import org.esa.snap.objectstoragefs.ObjectStorageFileSystem;
+import org.esa.snap.objectstoragefs.ObjectStorageFileSystemProvider;
+import org.esa.snap.objectstoragefs.ObjectStorageScanner;
 import org.xml.sax.SAXException;
 
 import javax.xml.parsers.ParserConfigurationException;
@@ -9,7 +12,7 @@ import java.util.Map;
 /**
  * Service-provider class for the AWS S3 object storage system.
  */
-public class AwsS3FileSystemProvider extends ObjectStorageFileSystemProvider {
+public class S3FileSystemProvider extends ObjectStorageFileSystemProvider {
     /**
      * Returns the URI scheme that identifies this provider.
      *
@@ -21,16 +24,16 @@ public class AwsS3FileSystemProvider extends ObjectStorageFileSystemProvider {
     }
 
     @Override
-    ObjectStorageScanner createObjectStorageScanner() {
+    protected ObjectStorageScanner createObjectStorageScanner() {
         try {
-            return new AwsS3Scanner();
+            return new S3Scanner();
         } catch (ParserConfigurationException | SAXException e) {
             throw new IllegalStateException(e);
         }
     }
 
     @Override
-    ObjectStorageFileSystem createFileSystem(String address, Map<String, ?> env) throws IOException {
+    protected ObjectStorageFileSystem createFileSystem(String address, Map<String, ?> env) throws IOException {
         Object delimiter = env.get("delimiter");
         return new ObjectStorageFileSystem(this,
                                            address,

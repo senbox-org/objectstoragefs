@@ -1,5 +1,8 @@
-package org.esa.snap.objectstoragefs;
+package org.esa.snap.objectstoragefs.aws;
 
+import org.esa.snap.objectstoragefs.ObjectStorageDirRef;
+import org.esa.snap.objectstoragefs.ObjectStorageFileRef;
+import org.esa.snap.objectstoragefs.ObjectStorageItemRef;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
@@ -7,7 +10,7 @@ import org.xml.sax.helpers.DefaultHandler;
 import java.util.LinkedList;
 import java.util.List;
 
-public class XmlResponseHandler extends DefaultHandler {
+public class S3ResponseHandler extends DefaultHandler {
     private static final String KEY = "Key";
     private static final String SIZE = "Size";
     private static final String CONTENTS = "Contents";
@@ -27,7 +30,7 @@ public class XmlResponseHandler extends DefaultHandler {
     private boolean isTruncated;
     private String prefix;
 
-    XmlResponseHandler(List<ObjectStorageItemRef> items) {
+    S3ResponseHandler(List<ObjectStorageItemRef> items) {
         this.items = items;
     }
 
