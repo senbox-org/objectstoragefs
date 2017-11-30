@@ -18,7 +18,7 @@ public class S3RestApiMockTest {
         DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
         Document doc = dBuilder.parse("http://localhost:8080");
         Assert.assertEquals("ListBucketResult", doc.getDocumentElement().getTagName());
-        Assert.assertEquals(16, doc.getDocumentElement().getChildNodes().getLength());
+        Assert.assertEquals(21, doc.getDocumentElement().getChildNodes().getLength());
 
         apiMock.stop();
     }

@@ -1,7 +1,7 @@
 package org.esa.snap.objectstoragefs.aws;
 
-import org.esa.snap.objectstoragefs.ObjectStorageItemRef;
-import org.esa.snap.objectstoragefs.ObjectStorageScanner;
+import org.esa.snap.objectstoragefs.ObjectStorageFileAttributes;
+import org.esa.snap.objectstoragefs.ObjectStorageWalker;
 import org.xml.sax.SAXException;
 import org.xml.sax.XMLReader;
 
@@ -13,11 +13,11 @@ import java.net.URLEncoder;
 import java.util.ArrayList;
 import java.util.List;
 
-class S3Scanner implements ObjectStorageScanner {
+class S3Walker implements ObjectStorageWalker {
 
     private XMLReader xmlReader;
 
-    S3Scanner() throws ParserConfigurationException, SAXException {
+    S3Walker() throws ParserConfigurationException, SAXException {
         SAXParserFactory spf = SAXParserFactory.newInstance();
         spf.setNamespaceAware(true);
         SAXParser saxParser = spf.newSAXParser();
@@ -34,12 +34,12 @@ class S3Scanner implements ObjectStorageScanner {
         params.append(name).append("=").append(URLEncoder.encode(value, "UTF8"));
     }
 
-    public List<ObjectStorageItemRef> scan(String address, String delimiter, String prefix) throws IOException {
+    public List<ObjectStorageFileAttributes> walk(String address, String prefix, String delimiter) throws IOException {
         StringBuffer paramBase = new StringBuffer();
-        addParam(paramBase, "delimiter", delimiter);
         addParam(paramBase, "prefix", prefix);
+        addParam(paramBase, "delimiter", delimiter);
 
-        ArrayList<ObjectStorageItemRef> items = new ArrayList<>();
+        ArrayList<ObjectStorageFileAttributes> items = new ArrayList<>();
         String nextContinuationToken = null;
         S3ResponseHandler handler;
         do {

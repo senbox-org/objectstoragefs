@@ -80,8 +80,9 @@ public class ObjectStoragePath implements Path {
     private final boolean directory;
     private final String pathName;
     private String[] names;
+    private ObjectStorageFileAttributes fileAttributes;
 
-    ObjectStoragePath(ObjectStorageFileSystem fileSystem, boolean absolute, boolean directory, String pathName) {
+    ObjectStoragePath(ObjectStorageFileSystem fileSystem, boolean absolute, boolean directory, String pathName, ObjectStorageFileAttributes fileAttributes) {
         if (fileSystem == null) {
             throw new NullPointerException("fileSystem");
         }
@@ -92,29 +93,41 @@ public class ObjectStoragePath implements Path {
         this.absolute = absolute;
         this.directory = directory;
         this.pathName = pathName;
-        this.names = null;
+        this.fileAttributes = fileAttributes;
+    }
+
+    static ObjectStoragePath fromFileAttributes(ObjectStorageFileSystem fileSystem, ObjectStorageFileAttributes fileAttributes) {
+        String separator = fileSystem.getSeparator();
+        String pathName = fileAttributes.fileKey().toString();
+        if (fileAttributes.isDirectory() && pathName.endsWith(separator)) {
+            int beginIndex = 0;
+            int endIndex = pathName.length() - separator.length();
+            pathName = pathName.substring(beginIndex, endIndex);
+        }
+        return new ObjectStoragePath(fileSystem, true, fileAttributes.isDirectory(), pathName, fileAttributes);
     }
 
     static ObjectStoragePath parsePath(ObjectStorageFileSystem fileSystem, String pathName) {
+        String separator = fileSystem.getSeparator();
         if (pathName.isEmpty()) {
             return fileSystem.getEmpty();
         }
-        if (pathName.equals("/")) {
+        if (pathName.equals(separator)) {
             return fileSystem.getRoot();
         }
         boolean absolute = false;
         boolean directory = false;
         int beginIndex = 0;
         int endIndex = pathName.length();
-        if (pathName.startsWith("/")) {
+        if (pathName.startsWith(separator)) {
             absolute = true;
-            beginIndex++;
+            beginIndex += separator.length();
         }
         if (pathName.endsWith("/")) {
             directory = true;
-            endIndex--;
+            endIndex -= separator.length();
         }
-        return new ObjectStoragePath(fileSystem, absolute, directory, pathName.substring(beginIndex, endIndex));
+        return new ObjectStoragePath(fileSystem, absolute, directory, pathName.substring(beginIndex, endIndex), null);
     }
 
     String getLocation() {
@@ -160,8 +173,16 @@ public class ObjectStoragePath implements Path {
     }
 
 
-    public boolean isDirectory() {
+    boolean isDirectory() {
         return directory;
+    }
+
+    ObjectStorageFileAttributes getFileAttributes() {
+        return fileAttributes;
+    }
+
+    void setFileAttributes(ObjectStorageFileAttributes fileAttributes) {
+        this.fileAttributes = fileAttributes;
     }
 
     /**
@@ -191,7 +212,7 @@ public class ObjectStoragePath implements Path {
             return null;
         }
         String name = getNames()[nameCount - 1];
-        return new ObjectStoragePath(fileSystem, false, directory, name);
+        return new ObjectStoragePath(fileSystem, false, directory, name, fileAttributes);
     }
 
     /**
@@ -253,7 +274,7 @@ public class ObjectStoragePath implements Path {
      */
     @Override
     public Path getName(int index) {
-        return new ObjectStoragePath(fileSystem, false, false, getNames()[index]);
+        return new ObjectStoragePath(fileSystem, false, false, getNames()[index], null);
     }
 
     /**
@@ -283,7 +304,8 @@ public class ObjectStoragePath implements Path {
         return new ObjectStoragePath(fileSystem,
                                      beginIndex == 0 && absolute,
                                      endIndex < getNameCount() || directory,
-                                     subPathName);
+                                     subPathName,
+                                     null);
     }
 
     /**
@@ -582,7 +604,6 @@ public class ObjectStoragePath implements Path {
         String[] names2 = path2.getNames();
 
         for (int i = 0; i < names1.length; i++) {
-            String s = names1[i];
             if (i >= names2.length || !names1[i].equals(names2[i])) {
                 return path2;
             }

@@ -1,8 +1,6 @@
 package org.esa.snap.objectstoragefs.aws;
 
-import org.esa.snap.objectstoragefs.ObjectStorageDirRef;
-import org.esa.snap.objectstoragefs.ObjectStorageFileRef;
-import org.esa.snap.objectstoragefs.ObjectStorageItemRef;
+import org.esa.snap.objectstoragefs.ObjectStorageFileAttributes;
 import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
@@ -21,7 +19,7 @@ public class S3ResponseHandler extends DefaultHandler {
     private static final String PREFIX = "Prefix";
 
     private LinkedList<String> elementStack = new LinkedList<>();
-    private List<ObjectStorageItemRef> items;
+    private List<ObjectStorageFileAttributes> items;
 
     private String key;
     private long size;
@@ -30,7 +28,7 @@ public class S3ResponseHandler extends DefaultHandler {
     private boolean isTruncated;
     private String prefix;
 
-    S3ResponseHandler(List<ObjectStorageItemRef> items) {
+    S3ResponseHandler(List<ObjectStorageFileAttributes> items) {
         this.items = items;
     }
 
@@ -61,9 +59,9 @@ public class S3ResponseHandler extends DefaultHandler {
         String currentElement = elementStack.removeLast();
         assert currentElement != null && currentElement.equals(localName);
         if (currentElement.equals(PREFIX) && elementStack.size() == 2 && elementStack.get(1).equals(COMMON_PREFIXES)) {
-            items.add(new ObjectStorageDirRef(prefix));
+            items.add(ObjectStorageFileAttributes.newDir(prefix));
         } else if (currentElement.equals(CONTENTS) && elementStack.size() == 1) {
-            items.add(new ObjectStorageFileRef(key, size, lastModified));
+            items.add(ObjectStorageFileAttributes.newFile(key, size, lastModified));
         }
     }
 

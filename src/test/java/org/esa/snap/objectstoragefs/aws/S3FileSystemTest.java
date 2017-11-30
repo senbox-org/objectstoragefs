@@ -21,7 +21,7 @@ import static org.junit.Assert.*;
 
 public abstract class S3FileSystemTest {
 
-    private ObjectStorageFileSystem fs;
+    protected ObjectStorageFileSystem fs;
 
     abstract String getAddress();
 
@@ -55,30 +55,6 @@ public abstract class S3FileSystemTest {
         assertEquals("/products/", iterator.next().toString());
         assertTrue(iterator.hasNext());
         assertEquals("/tiles/", iterator.next().toString());
-        assertFalse(iterator.hasNext());
-    }
-
-    @Test
-    public void testNewDirectoryStream() throws Exception {
-        FileSystemProvider provider = fs.provider();
-        Path path = fs.getPath("/");
-        DirectoryStream<Path> stream = provider.newDirectoryStream(path, p -> true);
-        Iterator<Path> iterator = stream.iterator();
-        assertTrue(iterator.hasNext());
-        assertEquals("/products/", iterator.next().toString());
-        assertTrue(iterator.hasNext());
-        assertEquals("/tiles/", iterator.next().toString());
-        assertFalse(iterator.hasNext());
-
-        path = fs.getPath("/products/");
-        stream = provider.newDirectoryStream(path, p -> true);
-        iterator = stream.iterator();
-        assertTrue(iterator.hasNext());
-        assertEquals("/products/2015/", iterator.next().toString());
-        assertTrue(iterator.hasNext());
-        assertEquals("/products/2016/", iterator.next().toString());
-        assertTrue(iterator.hasNext());
-        assertEquals("/products/2017/", iterator.next().toString());
         assertFalse(iterator.hasNext());
     }
 
@@ -151,7 +127,7 @@ public abstract class S3FileSystemTest {
         assertEquals("/tiles/1/C/CV/2015/12/25/0/preview.jpg", path.toString());
     }
 
-    //@Ignore
+    @Ignore
     @Test
     public void testFilesWalk() throws Exception {
         Path path = fs.getPath("/tiles/");

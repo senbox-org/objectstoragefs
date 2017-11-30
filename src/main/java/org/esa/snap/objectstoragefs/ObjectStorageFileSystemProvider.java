@@ -56,9 +56,9 @@ public abstract class ObjectStorageFileSystemProvider extends FileSystemProvider
         this.fileSystems = new HashMap<>();
     }
 
-    protected abstract ObjectStorageFileSystem createFileSystem(String address, Map<String, ?> env) throws IOException;
+    protected abstract ObjectStorageFileSystem newFileSystem(String address, Map<String, ?> env) throws IOException;
 
-    protected abstract ObjectStorageScanner createObjectStorageScanner();
+    protected abstract ObjectStorageWalker newObjectStorageWalker();
 
     /**
      * Constructs a new {@code FileSystem} object identified by a URI. This
@@ -99,7 +99,7 @@ public abstract class ObjectStorageFileSystemProvider extends FileSystemProvider
         if (!getScheme().equals(uri.getScheme())) {
             throw new IllegalArgumentException("uri");
         }
-        fileSystem = createFileSystem(uri.getSchemeSpecificPart(), env);
+        fileSystem = newFileSystem(uri.getSchemeSpecificPart(), env);
         fileSystems.put(uri, fileSystem);
         return fileSystem;
     }
@@ -258,7 +258,7 @@ public abstract class ObjectStorageFileSystemProvider extends FileSystemProvider
     @Override
     public DirectoryStream<Path> newDirectoryStream(Path dir, DirectoryStream.Filter<? super Path> filter) throws IOException {
         ObjectStorageFileSystem fs = (ObjectStorageFileSystem) dir.getFileSystem();
-        Iterable<Path> directories = fs.getDirectories(dir);
+        Iterable<Path> directories = fs.walkDir(dir, filter);
         return new DirectoryStream<Path>() {
             @Override
             public Iterator<Path> iterator() {
@@ -535,7 +535,7 @@ public abstract class ObjectStorageFileSystemProvider extends FileSystemProvider
      */
     @Override
     public <A extends BasicFileAttributes> A readAttributes(Path path, Class<A> type, LinkOption... options) throws IOException {
-        return (A) new ObjectStorageFileAttributes((ObjectStoragePath) path);
+        return (A) ObjectStorageFileAttributes.fromPath((ObjectStoragePath) path);
     }
 
     /**

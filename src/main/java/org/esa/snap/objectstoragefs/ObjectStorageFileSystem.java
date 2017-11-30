@@ -27,6 +27,7 @@ public class ObjectStorageFileSystem extends FileSystem {
     private String separator;
     private boolean closed;
     private List<ObjectStorageByteChannel> openChannels;
+    private ObjectStorageWalker walker;
 
     public ObjectStorageFileSystem(ObjectStorageFileSystemProvider provider, String address, String separator) {
         if (provider == null) {
@@ -46,8 +47,8 @@ public class ObjectStorageFileSystem extends FileSystem {
         this.separator = separator;
         this.closed = false;
         this.openChannels = new ArrayList<>();
-        this.root = new ObjectStoragePath(this, true, true, "");
-        this.empty = new ObjectStoragePath(this, false, false, "");
+        this.root = new ObjectStoragePath(this, true, true, "", new ObjectStorageFileAttributes("/", true,null, 0));
+        this.empty = new ObjectStoragePath(this, false, false, "", new ObjectStorageFileAttributes("", false,null, 0));
     }
 
     /**
@@ -148,7 +149,7 @@ public class ObjectStorageFileSystem extends FileSystem {
      */
     @Override
     public Iterable<Path> getRootDirectories() {
-        return getDirectories(getRoot());
+        return walkDir(getRoot(), path -> ((ObjectStoragePath) path).isDirectory());
     }
 
     /**
@@ -275,19 +276,30 @@ public class ObjectStorageFileSystem extends FileSystem {
         openChannels.remove(channel);
     }
 
-    Iterable<Path> getDirectories(Path dir) {
+    Iterable<Path> walkDir(Path dir, DirectoryStream.Filter<? super Path> filter) {
         assertOpen();
         Path path = dir.toAbsolutePath();
         String prefix = path.toString().substring(1);
-        List<ObjectStorageItemRef> objectStorageItemRefs;
+        List<ObjectStorageFileAttributes> files;
+        if (walker == null) {
+            walker = provider.newObjectStorageWalker();
+        }
         try {
-            objectStorageItemRefs = provider.createObjectStorageScanner().scan(address, getSeparator(), prefix);
+            files = walker.walk(address, prefix, getSeparator());
         } catch (IOException e) {
             throw new IllegalStateException(e);
         }
-        return objectStorageItemRefs.stream()
-                .filter(ObjectStorageItemRef::isDirectory)
-                .map(o -> ObjectStoragePath.parsePath(this, getSeparator() + o.getPathName()))
+        return files.stream()
+                .map(f -> ObjectStoragePath.fromFileAttributes(this, f))
+                .filter(p -> filterPath(p, filter))
                 .collect(Collectors.toList());
+    }
+
+    private boolean filterPath(ObjectStoragePath path, DirectoryStream.Filter<? super Path> filter) {
+        try {
+            return filter.accept(path);
+        } catch (IOException e) {
+            return false;
+        }
     }
 }

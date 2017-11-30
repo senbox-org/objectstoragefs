@@ -63,6 +63,7 @@ public class S3RestApiMock {
     private void loadFiles() {
         addFile("index.html", "2016-08-26T20:26:33.000Z", "text/html;charset=utf-8", "<html/>".getBytes());
         addFile("style.css", "2015-12-16T12:46:19.000Z", "text/css;charset=utf-8", "".getBytes());
+        addFile("GENERAL_QUALITY.xml", "2015-12-16T12:46:19.000Z", "text/xml;charset=utf-8", "<xml/>".getBytes());
         for (int i = 0; i < 3; i++) {
             String prefix = "products/201" + (5 + i) + "/10/1/S2A_OPER_PRD_MSIL1C_PDMC_20160729T004231_R007_V20151001T091034_20151001T091034/";
             String lastModified = "2016-07-13T17:24:" + (10 + i) + ".000Z";
@@ -146,6 +147,8 @@ public class S3RestApiMock {
                                                                "  <IsTruncated>false</IsTruncated>");
                 if (prefix != null) {
                     result.append(String.format("  <Prefix>%s</Prefix>\n", prefix));
+                } else {
+                    result.append("  <Prefix/>\n");
                 }
                 if (delimiter != null) {
                     result.append(String.format("  <Delimiter>%s</Delimiter>\n", delimiter));
@@ -160,9 +163,7 @@ public class S3RestApiMock {
 
                 ArrayList<String> keyList = new ArrayList<>();
                 HashSet<String> commonPrefixes = new HashSet<>();
-                if (delimiter.isEmpty() && prefix.isEmpty()) {
-                    keyList.addAll(files.keySet());
-                } else {
+                if (!delimiter.isEmpty()) {
                     for (File file : files.values()) {
                         if (file.key.startsWith(prefix)) {
                             int index = file.key.indexOf(delimiter, prefix.length());
@@ -173,6 +174,14 @@ public class S3RestApiMock {
                             }
                         }
                     }
+                } else if (!prefix.isEmpty()) {
+                    for (File file : files.values()) {
+                        if (file.key.startsWith(prefix)) {
+                            keyList.add(file.key);
+                        }
+                    }
+                } else {
+                    keyList.addAll(files.keySet());
                 }
                 Collections.sort(keyList);
                 for (String fileKey : keyList) {

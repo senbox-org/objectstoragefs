@@ -17,7 +17,7 @@ public class TestFileSystemProvider extends S3FileSystemProvider {
     }
 
     @Override
-    protected ObjectStorageFileSystem createFileSystem(String address, Map<String, ?> env) throws IOException {
+    protected ObjectStorageFileSystem newFileSystem(String address, Map<String, ?> env) throws IOException {
         Object delimiter = env.get("delimiter");
         return new ObjectStorageFileSystem(this,
                                            address,

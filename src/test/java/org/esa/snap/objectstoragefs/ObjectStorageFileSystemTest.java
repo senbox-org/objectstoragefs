@@ -46,7 +46,7 @@ public class ObjectStorageFileSystemTest {
         Assert.assertEquals("/hello/world/README.md", path.toString());
     }
 
-    //@Ignore
+    @Ignore
     @Test
     public void testPathsGetWithDefaultFs() throws Exception {
         // To see how the default fs behaves

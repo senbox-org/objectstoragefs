@@ -1,6 +1,6 @@
 package org.esa.snap.objectstoragefs.aws;
 
-import org.esa.snap.objectstoragefs.ObjectStorageItemRef;
+import org.esa.snap.objectstoragefs.ObjectStorageFileAttributes;
 import org.junit.Test;
 
 import java.io.InputStream;
@@ -22,15 +22,15 @@ public class S3FileSystemRemoteTest extends S3FileSystemTest {
 
     @Test
     public void testScanner() throws Exception {
-        List<ObjectStorageItemRef> items;
+        List<ObjectStorageFileAttributes> items;
 
-        items = new S3Scanner().scan(getAddress(), "/", "");
+        items = new S3Walker().walk(getAddress(), "", "/");
         assertEquals(7, items.size());
 
-        items = new S3Scanner().scan(getAddress(), "/", "products/");
+        items = new S3Walker().walk(getAddress(), "products/", "/");
         assertEquals(3, items.size());
 
-        items = new S3Scanner().scan(getAddress(), "/", "tiles/");
+        items = new S3Walker().walk(getAddress(), "tiles/", "/");
         assertEquals(60, items.size());
     }
 
