@@ -12,20 +12,6 @@ import java.util.*;
 
 public class AwsS3RestApiMock {
 
-    public static class File {
-        final String key;
-        final String lastModified;
-        final String contentType;
-        final byte[] data;
-
-        File(String key, String lastModified, String contentType, byte[] data) {
-            this.key = key;
-            this.lastModified = lastModified;
-            this.contentType = contentType;
-            this.data = data;
-        }
-    }
-
     private Server server;
     private Map<String, File> files = new HashMap<>();
     private long nextRequestId = new Random().nextLong();
@@ -34,6 +20,26 @@ public class AwsS3RestApiMock {
         AwsS3RestApiMock mock = new AwsS3RestApiMock();
         mock.start(8080);
         mock.server.join();
+    }
+
+    static int[] parseRange(String rangeSpec, int[] defaultRange) {
+        final String rangePrefix = "bytes=";
+        int[] value = Arrays.copyOf(defaultRange, 2);
+        if (!rangeSpec.startsWith(rangePrefix)) {
+            throw new IllegalArgumentException("rangeSpec");
+        }
+        String s = rangeSpec.substring(rangePrefix.length());
+        String[] parts = s.split("-", 2);
+        for (int i = 0; i < value.length; i++) {
+            String part = parts[i].trim();
+            if (!part.isEmpty()) {
+                value[i] = Integer.parseInt(part);
+            }
+        }
+        if (value[0] > value[1]) {
+            throw new IllegalArgumentException("rangeSpec");
+        }
+        return value;
     }
 
     @SuppressWarnings("WeakerAccess")
@@ -55,6 +61,8 @@ public class AwsS3RestApiMock {
     }
 
     private void loadFiles() {
+        addFile("index.html", "2016-08-26T20:26:33.000Z", "text/html;charset=utf-8", "<html/>".getBytes());
+        addFile("style.css", "2015-12-16T12:46:19.000Z", "text/css;charset=utf-8", "".getBytes());
         for (int i = 0; i < 3; i++) {
             String prefix = "products/201" + (5 + i) + "/10/1/S2A_OPER_PRD_MSIL1C_PDMC_20160729T004231_R007_V20151001T091034_20151001T091034/";
             String lastModified = "2016-07-13T17:24:" + (10 + i) + ".000Z";
@@ -76,6 +84,42 @@ public class AwsS3RestApiMock {
         }
     }
 
+    private String toContents(File file) {
+        return String.format("" +
+                                     "<Contents>\n" +
+                                     "  <Key>%s</Key>\n" +
+                                     "  <LastModified>%s</LastModified>\n" +
+                                     "  <Size>%d</Size>\n" +
+                                     "  <ETag>\"5093fa512c4aa58b5f080da62f4b00dc\"</ETag>\n" +
+                                     "  <Owner>\n" +
+                                     "    <ID>91d380b3cead28df927c824731b0173701336cd8d67b0679d7166288f3850f38</ID>\n" +
+                                     "  </Owner>\n" +
+                                     "  <StorageClass>STANDARD</StorageClass>\n" +
+                                     "</Contents>\n",
+                             file.key, file.lastModified, file.data.length);
+    }
+
+    private String toCommonPrefix(String prefix) {
+        return String.format("" +
+                                     "<CommonPrefixes>\n" +
+                                     "  <Prefix>%s</Prefix>\n" +
+                                     "</CommonPrefixes>\n", prefix);
+    }
+
+    public static class File {
+        final String key;
+        final String lastModified;
+        final String contentType;
+        final byte[] data;
+
+        File(String key, String lastModified, String contentType, byte[] data) {
+            this.key = key;
+            this.lastModified = lastModified;
+            this.contentType = contentType;
+            this.data = data;
+        }
+    }
+
     class AwsS3RestApiHandler extends AbstractHandler {
         @Override
         public void handle(String key,
@@ -85,9 +129,15 @@ public class AwsS3RestApiMock {
 
             nextRequestId++;
 
+            String prefix = httpServletRequest.getParameter("prefix");
+            String delimiter = httpServletRequest.getParameter("delimiter");
+
+            //System.out.println("AwsS3RestApiHandler:");
+            //System.out.println("  key = " + key);
+            //System.out.println("  prefix = " + prefix);
+            //System.out.println("  delimiter = " + delimiter);
+
             if (key.equals("/")) {
-                String prefix = httpServletRequest.getParameter("prefix");
-                String delimiter = httpServletRequest.getParameter("delimiter");
                 StringBuffer result = new StringBuffer("" +
                                                                "<ListBucketResult xmlns=\"http://s3.amazonaws.com/doc/2006-03-01/\">\n" +
                                                                "  <Name>TEST</Name>\n" +
@@ -110,7 +160,7 @@ public class AwsS3RestApiMock {
 
                 ArrayList<String> keyList = new ArrayList<>();
                 HashSet<String> commonPrefixes = new HashSet<>();
-                if (prefix.isEmpty()) {
+                if (delimiter.isEmpty() && prefix.isEmpty()) {
                     keyList.addAll(files.keySet());
                 } else {
                     for (File file : files.values()) {
@@ -138,21 +188,33 @@ public class AwsS3RestApiMock {
                 httpServletResponse.setContentType("text/xml;charset=utf-8");
                 httpServletResponse.getWriter().println(result);
             } else {
-                File file = files.get(key);
+                File file = files.get(key.substring(1));
                 if (file != null) {
                     String rangeSpec = httpServletRequest.getHeader("Range");
                     int[] range = new int[]{0, file.data.length - 1};
                     if (rangeSpec != null) {
-                        range = parseRange(rangeSpec, range);
+                        //System.out.println("  range = " + rangeSpec);
+                        try {
+                            range = parseRange(rangeSpec, range);
+                        } catch (IllegalArgumentException e) {
+                            httpServletResponse.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+                            return;
+                        }
                     }
-                    httpServletResponse.setStatus(HttpServletResponse.SC_OK);
+                    int offset = range[0];
+                    int length = 1 + range[1] - offset;
+                    if (offset == 0 && length == file.data.length) {
+                        httpServletResponse.setStatus(HttpServletResponse.SC_OK);
+                    } else {
+                        httpServletResponse.setStatus(HttpServletResponse.SC_PARTIAL_CONTENT);
+                    }
                     httpServletResponse.setContentType(file.contentType);
                     httpServletResponse.setContentLength(file.data.length);
                     httpServletResponse.setHeader("Last-Modified", file.lastModified);
                     httpServletResponse.setHeader("Accept-Ranges", "bytes");
-                    httpServletResponse.getOutputStream().write(file.data, range[0], 1 + range[1] - range[0]);
+                    httpServletResponse.getOutputStream().write(file.data, offset, length);
                 } else {
-                    httpServletResponse.setStatus(HttpServletResponse.SC_OK);
+                    httpServletResponse.setStatus(HttpServletResponse.SC_NOT_FOUND);
                     httpServletResponse.setContentType("text/xml;charset=utf-8");
                     httpServletResponse.getWriter().println(String.format("" +
                                                                                   "<Error>\n" +
@@ -170,44 +232,5 @@ public class AwsS3RestApiMock {
             }
             httpServletResponse.flushBuffer();
         }
-    }
-
-    private String toContents(File file) {
-        return String.format("" +
-                                     "<Contents>\n" +
-                                     "  <Key>%s</Key>\n" +
-                                     "  <LastModified>%s</LastModified>\n" +
-                                     "  <Size>%d</Size>\n" +
-                                     "  <ETag>\"5093fa512c4aa58b5f080da62f4b00dc\"</ETag>\n" +
-                                     "  <Owner>\n" +
-                                     "    <ID>91d380b3cead28df927c824731b0173701336cd8d67b0679d7166288f3850f38</ID>\n" +
-                                     "  </Owner>\n" +
-                                     "  <StorageClass>STANDARD</StorageClass>\n" +
-                                     "</Contents>\n",
-                             file.key, file.lastModified, file.data.length);
-    }
-
-    private String toCommonPrefix(String prefix) {
-        return String.format("" +
-                                     "<CommonPrefixes>\n" +
-                                     "  <Prefix>%s</Prefix>\n" +
-                                     "</CommonPrefixes>\n", prefix);
-    }
-
-    static int[] parseRange(String rangeSpec, int[] defaultRange) {
-        final String rangePrefix = "bytes=";
-        int[] value = Arrays.copyOf(defaultRange, 2);
-        if (!rangeSpec.startsWith(rangePrefix)) {
-            throw new IllegalArgumentException("rangeSpec");
-        }
-        String s = rangeSpec.substring(rangePrefix.length());
-        String[] parts = s.split("-", 2);
-        for (int i = 0; i < value.length; i++) {
-            String part = parts[i].trim();
-            if (!part.isEmpty()) {
-                value[i] = Integer.parseInt(part);
-            }
-        }
-        return value;
     }
 }

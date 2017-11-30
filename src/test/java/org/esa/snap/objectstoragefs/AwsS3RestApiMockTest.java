@@ -6,11 +6,6 @@ import org.w3c.dom.Document;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
-import javax.xml.parsers.SAXParser;
-import javax.xml.parsers.SAXParserFactory;
-import java.net.HttpURLConnection;
-import java.net.URL;
-import java.net.URLConnection;
 
 public class AwsS3RestApiMockTest {
 
@@ -23,7 +18,7 @@ public class AwsS3RestApiMockTest {
         DocumentBuilder dBuilder = dbFactory.newDocumentBuilder();
         Document doc = dBuilder.parse("http://localhost:8080");
         Assert.assertEquals("ListBucketResult", doc.getDocumentElement().getTagName());
-        Assert.assertEquals(332, doc.getDocumentElement().getChildNodes().getLength());
+        Assert.assertEquals(16, doc.getDocumentElement().getChildNodes().getLength());
 
         apiMock.stop();
     }

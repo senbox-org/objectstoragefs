@@ -10,7 +10,7 @@ import java.util.List;
 public class XmlResponseHandler extends DefaultHandler {
     private static final String KEY = "Key";
     private static final String SIZE = "Size";
-    private static final String CONTENT = "Content";
+    private static final String CONTENTS = "Contents";
     private static final String LAST_MODIFIED = "LastModified";
     private static final String NEXT_CONTINUATION_TOKEN = "NextContinuationToken";
     private static final String IS_TRUNCATED = "IsTruncated";
@@ -57,10 +57,9 @@ public class XmlResponseHandler extends DefaultHandler {
     public void endElement(String uri, String localName, String qName) throws SAXException {
         String currentElement = elementStack.removeLast();
         assert currentElement != null && currentElement.equals(localName);
-
         if (currentElement.equals(PREFIX) && elementStack.size() == 2 && elementStack.get(1).equals(COMMON_PREFIXES)) {
             items.add(new ObjectStorageDirRef(prefix));
-        } else if (currentElement.equals(CONTENT) && elementStack.size() == 1) {
+        } else if (currentElement.equals(CONTENTS) && elementStack.size() == 1) {
             items.add(new ObjectStorageFileRef(key, size, lastModified));
         }
     }

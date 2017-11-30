@@ -4,11 +4,11 @@ import org.junit.Test;
 
 import java.io.InputStream;
 import java.net.HttpURLConnection;
-import java.net.URI;
 import java.net.URL;
 import java.util.List;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class AwsS3FileSystemRemoteTest extends AwsS3FileSystemTest {
 
@@ -24,7 +24,7 @@ public class AwsS3FileSystemRemoteTest extends AwsS3FileSystemTest {
         List<ObjectStorageItemRef> items;
 
         items = new AwsS3Scanner().scan(getAddress(), "/", "");
-        assertEquals(2, items.size());
+        assertEquals(7, items.size());
 
         items = new AwsS3Scanner().scan(getAddress(), "/", "products/");
         assertEquals(3, items.size());

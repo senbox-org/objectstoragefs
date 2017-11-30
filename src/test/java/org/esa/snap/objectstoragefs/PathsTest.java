@@ -33,6 +33,8 @@ public class PathsTest {
             System.out.println("next = " + next + ", abs=" + path.isAbsolute());
         }
     }
+
+    @Ignore
     @Test
     public void testDefaultRoot() throws Exception {
         Path path = Paths.get(".").toAbsolutePath();

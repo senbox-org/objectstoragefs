@@ -7,17 +7,13 @@ import org.junit.Test;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 public class AwsS3FileSystemLocalTest extends AwsS3FileSystemTest {
 
     private static final int PORT = 8080;
     private static final String ADDRESS = "http://localhost:" + PORT;
     private static AwsS3RestApiMock apiMock;
-
-    @Override
-    String getAddress() {
-        return ADDRESS;
-    }
 
     @BeforeClass
     public static void setUpClass() throws Exception {
@@ -30,18 +26,43 @@ public class AwsS3FileSystemLocalTest extends AwsS3FileSystemTest {
         apiMock.stop();
     }
 
+    @Override
+    String getAddress() {
+        return ADDRESS;
+    }
+
     @Test
     public void testScanner() throws Exception {
         List<ObjectStorageItemRef> items;
 
         items = new AwsS3Scanner().scan(getAddress(), "/", "");
-        assertEquals(0, items.size());
+        assertEquals(4, items.size());
+        assertEquals("index.html", items.get(0).getPathName());
+        assertTrue(items.get(0).isFile());
+        assertEquals("style.css", items.get(1).getPathName());
+        assertTrue(items.get(1).isFile());
+        assertEquals("products/", items.get(2).getPathName());
+        assertTrue(items.get(2).isDirectory());
+        assertEquals("tiles/", items.get(3).getPathName());
+        assertTrue(items.get(3).isDirectory());
 
         items = new AwsS3Scanner().scan(getAddress(), "/", "products/");
         assertEquals(3, items.size());
+        assertEquals("products/2015/", items.get(0).getPathName());
+        assertTrue(items.get(0).isDirectory());
+        assertEquals("products/2016/", items.get(1).getPathName());
+        assertTrue(items.get(1).isDirectory());
+        assertEquals("products/2017/", items.get(2).getPathName());
+        assertTrue(items.get(2).isDirectory());
 
         items = new AwsS3Scanner().scan(getAddress(), "/", "tiles/");
         assertEquals(3, items.size());
+        assertEquals("tiles/1/", items.get(0).getPathName());
+        assertTrue(items.get(0).isDirectory());
+        assertEquals("tiles/2/", items.get(1).getPathName());
+        assertTrue(items.get(1).isDirectory());
+        assertEquals("tiles/3/", items.get(2).getPathName());
+        assertTrue(items.get(2).isDirectory());
     }
 
 }

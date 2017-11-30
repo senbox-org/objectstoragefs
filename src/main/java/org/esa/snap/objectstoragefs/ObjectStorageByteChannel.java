@@ -17,10 +17,11 @@ import java.nio.channels.SeekableByteChannel;
 class ObjectStorageByteChannel implements SeekableByteChannel {
 
     private final URL url;
-    private final long size;
+    private final long contentLength;
+    private final String contentType;
+    private final byte[] buffer;
     private HttpURLConnection connection;
     private long position;
-    private final byte[] buffer;
 
     ObjectStorageByteChannel(ObjectStoragePath path) throws IOException {
         this(path, 1024 * 16);
@@ -29,7 +30,8 @@ class ObjectStorageByteChannel implements SeekableByteChannel {
     ObjectStorageByteChannel(ObjectStoragePath path, int bufferSize) throws IOException {
         url = new URL(path.getLocation());
         this.connection = connect();
-        this.size = connection.getHeaderFieldLong("Content-Length", 0L);
+        this.contentLength = connection.getContentLengthLong();
+        this.contentType = connection.getContentType();
         this.position = 0;
         this.buffer = new byte[bufferSize];
     }
@@ -43,7 +45,7 @@ class ObjectStorageByteChannel implements SeekableByteChannel {
      */
     @Override
     public long size() throws IOException {
-        return size;
+        return contentLength;
     }
 
     /**
@@ -72,8 +74,11 @@ class ObjectStorageByteChannel implements SeekableByteChannel {
     @Override
     public SeekableByteChannel position(long newPosition) throws IOException {
         assertOpen();
-        if (newPosition < 0 || position > size) {
+        if (newPosition < 0) {
             throw new IllegalArgumentException("newPosition is negative");
+        }
+        if (newPosition > contentLength) {
+            throw new EOFException(url.toString());
         }
         long delta = newPosition - position;
         if (delta == 0) {
@@ -83,12 +88,13 @@ class ObjectStorageByteChannel implements SeekableByteChannel {
             // If the delta is positive and less than the internal buffer perform optimisation:
             // reuse existing connection and download bytes until the seek position is reached.
             skipBytes((int) delta);
+            position += delta;
         } else {
             // ... otherwise establish new connection utilizing the "Range" request header parameter.
             close();
+            position += delta;
             this.connection = connect();
         }
-        position += delta;
         return this;
     }
 
@@ -179,13 +185,16 @@ class ObjectStorageByteChannel implements SeekableByteChannel {
     }
 
     private int readBytes(byte[] array, int offset, int length) throws IOException {
+        if (position >= contentLength) {
+            throw new EOFException(url.toString());
+        }
         InputStream stream = connection.getInputStream();
         int off = offset;
         int len = length;
         while (len > 0) {
             int n = stream.read(array, off, len);
             if (n < 0) {
-                throw new EOFException();
+                throw new EOFException(url.toString());
             }
             len -= n;
             off += n;
@@ -198,11 +207,13 @@ class ObjectStorageByteChannel implements SeekableByteChannel {
         connection.setRequestMethod("GET");
         connection.setDoInput(true);
         if (position > 0) {
-            connection.setRequestProperty("Range", "bytes=" + position + "-");
+            String rangeSpec = "bytes=" + position + "-" + (contentLength - 1);
+            connection.setRequestProperty("Range", rangeSpec);
         }
         connection.connect();
-        if (connection.getResponseCode() != 200) {
-            throw new IOException(connection.getResponseMessage());
+        int responseCode = connection.getResponseCode();
+        if (responseCode < 200 || responseCode >= 300) {
+            throw new IOException(url + ": response code " + responseCode + ": " + connection.getResponseMessage());
         }
         return connection;
     }

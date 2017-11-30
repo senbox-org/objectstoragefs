@@ -281,9 +281,9 @@ public class ObjectStoragePath implements Path {
         String[] subPath = Arrays.copyOfRange(names, beginIndex, endIndex);
         String subPathName = String.join(fileSystem.getSeparator(), subPath);
         return new ObjectStoragePath(fileSystem,
-                beginIndex == 0 && absolute,
-                endIndex < getNameCount() || directory,
-                subPathName);
+                                     beginIndex == 0 && absolute,
+                                     endIndex < getNameCount() || directory,
+                                     subPathName);
     }
 
     /**

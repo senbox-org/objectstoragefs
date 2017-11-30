@@ -18,7 +18,7 @@ public class TestFileSystemProvider extends AwsS3FileSystemProvider {
     ObjectStorageFileSystem createFileSystem(String address, Map<String, ?> env) throws IOException {
         Object delimiter = env.get("delimiter");
         return new ObjectStorageFileSystem(this,
-                address,
-                delimiter != null ? delimiter.toString() : "/");
+                                           address,
+                                           delimiter != null ? delimiter.toString() : "/");
     }
 }

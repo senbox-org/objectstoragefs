@@ -5,12 +5,16 @@ import org.junit.Before;
 import org.junit.Ignore;
 import org.junit.Test;
 
+import java.io.EOFException;
 import java.net.URI;
 import java.nio.ByteBuffer;
 import java.nio.channels.SeekableByteChannel;
 import java.nio.file.*;
 import java.nio.file.spi.FileSystemProvider;
-import java.util.*;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Map;
 
 import static org.junit.Assert.*;
 
@@ -85,10 +89,37 @@ public abstract class AwsS3FileSystemTest {
 
         assertNotNull(channel);
         assertEquals(116665, channel.size());
+        assertEquals(0, channel.position());
 
-        ByteBuffer buffer = ByteBuffer.wrap(new byte[(int) channel.size()]);
+        ByteBuffer buffer = ByteBuffer.wrap(new byte[116665]);
         int numRead = channel.read(buffer);
-        assertEquals(numRead, channel.size());
+        assertEquals(116665, numRead);
+        assertEquals(116665, channel.size());
+        assertEquals(116665, channel.position());
+
+        channel.position(100000);
+        assertEquals(100000, channel.position());
+        assertEquals(116665, channel.size());
+
+        buffer = ByteBuffer.wrap(new byte[10000]);
+        numRead = channel.read(buffer);
+        assertEquals(10000, numRead);
+        assertEquals(110000, channel.position());
+        assertEquals(116665, channel.size());
+
+        buffer = ByteBuffer.wrap(new byte[6665]);
+        numRead = channel.read(buffer);
+        assertEquals(6665, numRead);
+        assertEquals(116665, channel.position());
+        assertEquals(116665, channel.size());
+
+        buffer = ByteBuffer.wrap(new byte[10]);
+        try {
+            numRead = channel.read(buffer);
+            fail("EOFException expected, but read " + numRead + " bytes");
+        } catch (EOFException e) {
+            // ok
+        }
     }
 
     @Test

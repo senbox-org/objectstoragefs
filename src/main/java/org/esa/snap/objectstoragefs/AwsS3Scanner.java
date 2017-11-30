@@ -22,6 +22,16 @@ class AwsS3Scanner implements ObjectStorageScanner {
         xmlReader = saxParser.getXMLReader();
     }
 
+    private static void addParam(StringBuffer params, String name, String value) throws IOException {
+        if (value == null || value.isEmpty()) {
+            return;
+        }
+        if (params.length() > 0) {
+            params.append("&");
+        }
+        params.append(name).append("=").append(URLEncoder.encode(value, "UTF8"));
+    }
+
     public List<ObjectStorageItemRef> scan(String address, String delimiter, String prefix) throws IOException {
         StringBuffer paramBase = new StringBuffer();
         addParam(paramBase, "delimiter", delimiter);
@@ -39,7 +49,7 @@ class AwsS3Scanner implements ObjectStorageScanner {
             if (params.length() > 0) {
                 systemId += "?" + params;
             }
-            System.out.println("systemId = " + systemId);
+            // System.out.println("systemId = " + systemId);
             try {
                 xmlReader.parse(systemId);
             } catch (SAXException e) {
@@ -49,15 +59,5 @@ class AwsS3Scanner implements ObjectStorageScanner {
         } while (handler.getIsTruncated());
 
         return items;
-    }
-
-    private static void addParam(StringBuffer params, String name, String value) throws IOException {
-        if (value == null || value.isEmpty()) {
-            return;
-        }
-        if (params.length() > 0) {
-            params.append("&");
-        }
-        params.append(name).append("=").append(URLEncoder.encode(value, "UTF8"));
     }
 }
