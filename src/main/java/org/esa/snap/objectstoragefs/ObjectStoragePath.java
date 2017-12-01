@@ -3,8 +3,10 @@ package org.esa.snap.objectstoragefs;
 import java.io.File;
 import java.io.IOError;
 import java.io.IOException;
+import java.net.MalformedURLException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.net.URL;
 import java.nio.file.*;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -81,6 +83,7 @@ public class ObjectStoragePath implements Path {
     private final String pathName;
     private String[] names;
     private ObjectStorageFileAttributes fileAttributes;
+    private URL fileURL;
 
     ObjectStoragePath(ObjectStorageFileSystem fileSystem, boolean absolute, boolean directory, String pathName, ObjectStorageFileAttributes fileAttributes) {
         if (fileSystem == null) {
@@ -130,16 +133,31 @@ public class ObjectStoragePath implements Path {
         return new ObjectStoragePath(fileSystem, absolute, directory, pathName.substring(beginIndex, endIndex), null);
     }
 
-    String getLocation() {
-        return fileSystem.getAddress() + toString();
+    URL getFileURL() {
+        if (fileURL == null) {
+            synchronized (this) {
+                if (fileURL == null) {
+                    try {
+                        fileURL = new URL(fileSystem.getAddress() + toString());
+                    } catch (MalformedURLException e) {
+                        throw new IllegalStateException(e);
+                    }
+                }
+            }
+        }
+        return fileURL;
     }
 
     private String[] getNames() {
         if (names == null) {
-            if (pathName.isEmpty()) {
-                names = new String[0];
-            } else {
-                names = pathName.split(fileSystem.getSeparator());
+            synchronized (this) {
+                if (names == null) {
+                    if (pathName.isEmpty()) {
+                        names = new String[0];
+                    } else {
+                        names = pathName.split(fileSystem.getSeparator());
+                    }
+                }
             }
         }
         return names;
@@ -593,16 +611,18 @@ public class ObjectStoragePath implements Path {
         if (other == null) {
             throw new NullPointerException("other");
         }
+
         if (equals(other)) {
             return fileSystem.getEmpty();
         }
+
         ObjectStoragePath path2 = (ObjectStoragePath) other;
         if (isAbsolute() != path2.isAbsolute()) {
             throw new IllegalArgumentException("other");
         }
+
         String[] names1 = getNames();
         String[] names2 = path2.getNames();
-
         for (int i = 0; i < names1.length; i++) {
             if (i >= names2.length || !names1[i].equals(names2[i])) {
                 return path2;
@@ -695,7 +715,8 @@ public class ObjectStoragePath implements Path {
         if (isAbsolute()) {
             return this;
         }
-        throw new IOError(new IOException("default directory to resolve against are not supported"));
+        // Just turn into absolute path as-is, because we don't have a "current working directory".
+        return new ObjectStoragePath(fileSystem, true, directory, pathName, fileAttributes);
     }
 
     /**
@@ -739,20 +760,12 @@ public class ObjectStoragePath implements Path {
      */
     @Override
     public Path toRealPath(LinkOption... options) throws IOException {
-        // we don't support links as well as the directories "." and ".."
+        // TODO - support directories "." and ".."
         return toAbsolutePath();
     }
 
     /**
-     * Returns a {@link File} object representing this path. Where this {@code
-     * Path} is associated with the default provider, then this method is
-     * equivalent to returning a {@code File} object constructed with the
-     * {@code String} representation of this path.
-     * <p>
-     * <p> If this path was created by invoking the {@code File} {@link
-     * File#toPath toPath} method then there is no guarantee that the {@code
-     * File} object returned by this method is {@link #equals equal} to the
-     * original {@code File}.
+     * Returns a {@link File} object representing this path.
      *
      * @return a {@code File} object representing this path
      * @throws UnsupportedOperationException if this {@code Path} is not associated with the default provider
@@ -764,35 +777,6 @@ public class ObjectStoragePath implements Path {
 
     /**
      * Registers the file located by this path with a watch service.
-     * <p>
-     * <p> In this release, this path locates a directory that exists. The
-     * directory is registered with the watch service so that entries in the
-     * directory can be watched. The {@code events} parameter is the events to
-     * register and may contain the following events:
-     * <ul>
-     * <li>{@link StandardWatchEventKinds#ENTRY_CREATE ENTRY_CREATE} -
-     * entry created or moved into the directory</li>
-     * <li>{@link StandardWatchEventKinds#ENTRY_DELETE ENTRY_DELETE} -
-     * entry deleted or moved out of the directory</li>
-     * <li>{@link StandardWatchEventKinds#ENTRY_MODIFY ENTRY_MODIFY} -
-     * entry in directory was modified</li>
-     * </ul>
-     * <p>
-     * <p> The {@link WatchEvent#context context} for these events is the
-     * relative path between the directory located by this path, and the path
-     * that locates the directory entry that is created, deleted, or modified.
-     * <p>
-     * <p> The set of events may include additional implementation specific
-     * event that are not defined by the enum {@link StandardWatchEventKinds}
-     * <p>
-     * <p> The {@code modifiers} parameter specifies <em>modifiers</em> that
-     * qualify how the directory is registered. This release does not define any
-     * <em>standard</em> modifiers. It may contain implementation specific
-     * modifiers.
-     * <p>
-     * <p> Where a file is registered with a watch service by means of a symbolic
-     * link then it is implementation specific if the watch continues to depend
-     * on the existence of the symbolic link after it is registered.
      *
      * @param watcher   the watch service to which this object is to be registered
      * @param events    the events for which this object should be registered
@@ -811,27 +795,12 @@ public class ObjectStoragePath implements Path {
      */
     @Override
     public WatchKey register(WatchService watcher, WatchEvent.Kind<?>[] events, WatchEvent.Modifier... modifiers) throws IOException {
+        // TODO - implement me
         throw new UnsupportedOperationException();
     }
 
     /**
      * Registers the file located by this path with a watch service.
-     * <p>
-     * <p> An invocation of this method behaves in exactly the same way as the
-     * invocation
-     * <pre>
-     *     watchable.{@link #register(WatchService, WatchEvent.Kind[], WatchEvent.Modifier[]) register}(watcher, events, new WatchEvent.Modifier[0]);
-     * </pre>
-     * <p>
-     * <p> <b>Usage Example:</b>
-     * Suppose we wish to register a directory for entry create, delete, and modify
-     * events:
-     * <pre>
-     *     Path dir = ...
-     *     WatchService watcher = ...
-     *
-     *     WatchKey key = dir.register(watcher, ENTRY_CREATE, ENTRY_DELETE, ENTRY_MODIFY);
-     * </pre>
      *
      * @param watcher The watch service to which this object is to be registered
      * @param events  The events for which this object should be registered
@@ -849,6 +818,7 @@ public class ObjectStoragePath implements Path {
      */
     @Override
     public WatchKey register(WatchService watcher, WatchEvent.Kind<?>[] events) throws IOException {
+        // TODO - implement me
         throw new UnsupportedOperationException();
     }
 
