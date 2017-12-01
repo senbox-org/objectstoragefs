@@ -30,7 +30,7 @@ class ObjectStorageByteChannel implements SeekableByteChannel {
 
     private ObjectStorageByteChannel(ObjectStoragePath path, int bufferSize) throws IOException {
         this.path = path;
-        this.url = new URL(path.getLocation());
+        this.url = path.getFileURL();
         this.connection = connect();
         this.contentLength = connection.getContentLengthLong();
         this.contentType = connection.getContentType();
