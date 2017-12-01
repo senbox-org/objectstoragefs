@@ -222,6 +222,7 @@ public class ObjectStorageFileSystem extends FileSystem {
      */
     @Override
     public PathMatcher getPathMatcher(String syntaxAndPattern) {
+        // TODO - implement me
         throw new UnsupportedOperationException();
     }
 
@@ -235,6 +236,7 @@ public class ObjectStorageFileSystem extends FileSystem {
      */
     @Override
     public UserPrincipalLookupService getUserPrincipalLookupService() {
+        // TODO - implement me
         throw new UnsupportedOperationException();
     }
 
@@ -249,6 +251,7 @@ public class ObjectStorageFileSystem extends FileSystem {
      */
     @Override
     public WatchService newWatchService() throws IOException {
+        // TODO - implement me
         throw new UnsupportedOperationException();
     }
 

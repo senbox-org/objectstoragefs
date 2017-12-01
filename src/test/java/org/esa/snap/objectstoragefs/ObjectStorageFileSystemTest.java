@@ -48,16 +48,23 @@ public class ObjectStorageFileSystemTest {
 
     @Ignore
     @Test
-    public void testPathsGetWithDefaultFs() throws Exception {
+    public void testDefaults() throws Exception {
         // To see how the default fs behaves
         System.out.println("###########################");
+        Iterable<FileStore> fileStores = FileSystems.getDefault().getFileStores();
+        for (FileStore fileStore : fileStores) {
+            System.out.println("file stores:");
+            System.out.println("  name = " + fileStore.name());
+            System.out.println("  type = " + fileStore.type());
+            System.out.println("  totalSpace = " + fileStore.getTotalSpace());
+        }
         Path cwd = Paths.get("").toAbsolutePath();
-        Path root = cwd.getRoot();
-        System.out.println(root);
+        System.out.println("cwd: " + cwd);
+        System.out.println("root: " + cwd.getRoot());
         Iterator<Path> iterator = Files.walk(cwd).iterator();
         while (iterator.hasNext()) {
             Path next = iterator.next();
-            System.out.println(next);
+            System.out.println("  " + next);
         }
         System.out.println("###########################");
     }

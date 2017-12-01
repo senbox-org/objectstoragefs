@@ -432,49 +432,6 @@ public abstract class ObjectStorageFileSystemProvider extends FileSystemProvider
 
     /**
      * Checks the existence, and optionally the accessibility, of a file.
-     * <p>
-     * <p> This method may be used by the {@link Files#isReadable isReadable},
-     * {@link Files#isWritable isWritable} and {@link Files#isExecutable
-     * isExecutable} methods to check the accessibility of a file.
-     * <p>
-     * <p> This method checks the existence of a file and that this Java virtual
-     * machine has appropriate privileges that would allow it access the file
-     * according to all of access modes specified in the {@code modes} parameter
-     * as follows:
-     * <p>
-     * <table border=1 cellpadding=5 summary="">
-     * <tr> <th>Value</th> <th>Description</th> </tr>
-     * <tr>
-     * <td> {@link AccessMode#READ READ} </td>
-     * <td> Checks that the file exists and that the Java virtual machine has
-     * permission to read the file. </td>
-     * </tr>
-     * <tr>
-     * <td> {@link AccessMode#WRITE WRITE} </td>
-     * <td> Checks that the file exists and that the Java virtual machine has
-     * permission to write to the file, </td>
-     * </tr>
-     * <tr>
-     * <td> {@link AccessMode#EXECUTE EXECUTE} </td>
-     * <td> Checks that the file exists and that the Java virtual machine has
-     * permission to {@link Runtime#exec execute} the file. The semantics
-     * may differ when checking access to a directory. For example, on UNIX
-     * systems, checking for {@code EXECUTE} access checks that the Java
-     * virtual machine has permission to search the directory in order to
-     * access file or subdirectories. </td>
-     * </tr>
-     * </table>
-     * <p>
-     * <p> If the {@code modes} parameter is of length zero, then the existence
-     * of the file is checked.
-     * <p>
-     * <p> This method follows symbolic links if the file referenced by this
-     * object is a symbolic link. Depending on the implementation, this method
-     * may require to read file permissions, access control lists, or other
-     * file attributes in order to check the effective access to the file. To
-     * determine the effective access to a file may require access to several
-     * attributes and so in some implementations this method may not be atomic
-     * with respect to other file system operations.
      *
      * @param path  the path to the file to check
      * @param modes The access modes to check; may have zero elements
@@ -497,6 +454,7 @@ public abstract class ObjectStorageFileSystemProvider extends FileSystemProvider
      */
     @Override
     public void checkAccess(Path path, AccessMode... modes) throws IOException {
+        // TODO - implement me
         throw new UnsupportedOperationException();
     }
 
@@ -560,6 +518,7 @@ public abstract class ObjectStorageFileSystemProvider extends FileSystemProvider
      */
     @Override
     public Map<String, Object> readAttributes(Path path, String attributes, LinkOption... options) throws IOException {
+        // TODO - implement me
         throw new UnsupportedOperationException();
     }
 
@@ -587,6 +546,7 @@ public abstract class ObjectStorageFileSystemProvider extends FileSystemProvider
      */
     @Override
     public void setAttribute(Path path, String attribute, Object value, LinkOption... options) throws IOException {
+        // TODO - implement me
         throw new UnsupportedOperationException();
     }
 
