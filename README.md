@@ -38,6 +38,7 @@ This project's code is still experimental and the `FileSystem` implementations a
 The following limitations apply:
 
 * File systems have no authentication support yet, therefore only public buckets can be accessed.
+* Paths must not contain the special directories named `"."` and `".."`.
 * File systems are currently read-only, so the following methods are not implemented and will throw `UnsupportedOperationException`:
   * `ObjectStorageFileSystemProvider.createDirectory()`  
   * `ObjectStorageFileSystemProvider.delete()`  
