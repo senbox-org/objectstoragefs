@@ -5,6 +5,7 @@ import org.xml.sax.Attributes;
 import org.xml.sax.SAXException;
 import org.xml.sax.helpers.DefaultHandler;
 
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -19,7 +20,7 @@ public class S3ResponseHandler extends DefaultHandler {
     private static final String PREFIX = "Prefix";
 
     private LinkedList<String> elementStack = new LinkedList<>();
-    private List<ObjectStorageFileAttributes> items;
+    private List<BasicFileAttributes> items;
 
     private String key;
     private long size;
@@ -28,7 +29,7 @@ public class S3ResponseHandler extends DefaultHandler {
     private boolean isTruncated;
     private String prefix;
 
-    S3ResponseHandler(List<ObjectStorageFileAttributes> items) {
+    S3ResponseHandler(List<BasicFileAttributes> items) {
         this.items = items;
     }
 

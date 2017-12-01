@@ -8,6 +8,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
 import java.nio.file.*;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Iterator;
@@ -82,10 +83,10 @@ public class ObjectStoragePath implements Path {
     private final boolean directory;
     private final String pathName;
     private String[] names;
-    private ObjectStorageFileAttributes fileAttributes;
+    private BasicFileAttributes fileAttributes;
     private URL fileURL;
 
-    ObjectStoragePath(ObjectStorageFileSystem fileSystem, boolean absolute, boolean directory, String pathName, ObjectStorageFileAttributes fileAttributes) {
+    ObjectStoragePath(ObjectStorageFileSystem fileSystem, boolean absolute, boolean directory, String pathName, BasicFileAttributes fileAttributes) {
         if (fileSystem == null) {
             throw new NullPointerException("fileSystem");
         }
@@ -99,7 +100,7 @@ public class ObjectStoragePath implements Path {
         this.fileAttributes = fileAttributes;
     }
 
-    static ObjectStoragePath fromFileAttributes(ObjectStorageFileSystem fileSystem, ObjectStorageFileAttributes fileAttributes) {
+    static ObjectStoragePath fromFileAttributes(ObjectStorageFileSystem fileSystem, BasicFileAttributes fileAttributes) {
         String separator = fileSystem.getSeparator();
         String pathName = fileAttributes.fileKey().toString();
         if (fileAttributes.isDirectory() && pathName.endsWith(separator)) {
@@ -195,11 +196,11 @@ public class ObjectStoragePath implements Path {
         return directory;
     }
 
-    ObjectStorageFileAttributes getFileAttributes() {
+    BasicFileAttributes getFileAttributes() {
         return fileAttributes;
     }
 
-    void setFileAttributes(ObjectStorageFileAttributes fileAttributes) {
+    void setFileAttributes(BasicFileAttributes fileAttributes) {
         this.fileAttributes = fileAttributes;
     }
 

@@ -6,6 +6,7 @@ import org.junit.Test;
 import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
@@ -22,7 +23,7 @@ public class S3FileSystemRemoteTest extends S3FileSystemTest {
 
     @Test
     public void testScanner() throws Exception {
-        List<ObjectStorageFileAttributes> items;
+        List<BasicFileAttributes> items;
 
         items = new S3Walker().walk(getAddress(), "", "/");
         assertEquals(7, items.size());

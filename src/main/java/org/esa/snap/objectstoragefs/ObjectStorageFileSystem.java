@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.nio.channels.Channel;
 import java.nio.channels.SeekableByteChannel;
 import java.nio.file.*;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.attribute.FileAttribute;
 import java.nio.file.attribute.FileAttributeView;
 import java.nio.file.attribute.UserPrincipalLookupService;
@@ -47,8 +48,8 @@ public class ObjectStorageFileSystem extends FileSystem {
         this.separator = separator;
         this.closed = false;
         this.openChannels = new ArrayList<>();
-        this.root = new ObjectStoragePath(this, true, true, "", new ObjectStorageFileAttributes("/", true,null, 0));
-        this.empty = new ObjectStoragePath(this, false, false, "", new ObjectStorageFileAttributes("", false,null, 0));
+        this.root = new ObjectStoragePath(this, true, true, "", ObjectStorageFileAttributes.ROOT);
+        this.empty = new ObjectStoragePath(this, false, false, "", ObjectStorageFileAttributes.EMPTY);
     }
 
     /**
@@ -283,7 +284,7 @@ public class ObjectStorageFileSystem extends FileSystem {
         assertOpen();
         Path path = dir.toAbsolutePath();
         String prefix = path.toString().substring(1);
-        List<ObjectStorageFileAttributes> files;
+        List<BasicFileAttributes> files;
         if (walker == null) {
             walker = provider.newObjectStorageWalker();
         }

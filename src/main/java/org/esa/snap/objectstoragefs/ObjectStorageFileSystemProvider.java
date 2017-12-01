@@ -493,6 +493,9 @@ public abstract class ObjectStorageFileSystemProvider extends FileSystemProvider
      */
     @Override
     public <A extends BasicFileAttributes> A readAttributes(Path path, Class<A> type, LinkOption... options) throws IOException {
+        if (!type.equals(BasicFileAttributes.class)) {
+            throw new UnsupportedOperationException("can only provide instance of BasicFileAttributes");
+        }
         return (A) ObjectStorageFileAttributes.fromPath((ObjectStoragePath) path);
     }
 

@@ -10,6 +10,7 @@ import javax.xml.parsers.SAXParser;
 import javax.xml.parsers.SAXParserFactory;
 import java.io.IOException;
 import java.net.URLEncoder;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -34,12 +35,12 @@ class S3Walker implements ObjectStorageWalker {
         params.append(name).append("=").append(URLEncoder.encode(value, "UTF8"));
     }
 
-    public List<ObjectStorageFileAttributes> walk(String address, String prefix, String delimiter) throws IOException {
+    public List<BasicFileAttributes> walk(String address, String prefix, String delimiter) throws IOException {
         StringBuffer paramBase = new StringBuffer();
         addParam(paramBase, "prefix", prefix);
         addParam(paramBase, "delimiter", delimiter);
 
-        ArrayList<ObjectStorageFileAttributes> items = new ArrayList<>();
+        ArrayList<BasicFileAttributes> items = new ArrayList<>();
         String nextContinuationToken = null;
         S3ResponseHandler handler;
         do {

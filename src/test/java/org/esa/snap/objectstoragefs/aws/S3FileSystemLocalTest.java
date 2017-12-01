@@ -7,6 +7,7 @@ import org.junit.Test;
 
 import java.nio.file.DirectoryStream;
 import java.nio.file.Path;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.nio.file.spi.FileSystemProvider;
 import java.util.Iterator;
 import java.util.List;
@@ -67,7 +68,7 @@ public class S3FileSystemLocalTest extends S3FileSystemTest {
 
     @Test
     public void testScanner() throws Exception {
-        List<ObjectStorageFileAttributes> items;
+        List<BasicFileAttributes> items;
 
         items = new S3Walker().walk(getAddress(), "", "/");
         assertEquals(5, items.size());

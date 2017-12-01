@@ -11,6 +11,7 @@ import java.net.URI;
 import java.nio.ByteBuffer;
 import java.nio.channels.SeekableByteChannel;
 import java.nio.file.*;
+import java.nio.file.attribute.FileTime;
 import java.nio.file.spi.FileSystemProvider;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -118,6 +119,14 @@ public abstract class S3FileSystemTest {
         } catch (EOFException e) {
             // ok
         }
+    }
+
+    @Test
+    public void testBasicFileAttributes() throws Exception {
+        Path path = fs.getPath("/tiles/1/C/CV/2015/12/25/0/preview.jpg");
+        assertEquals(116665, Files.size(path));
+        FileTime lastModifiedTime = Files.getLastModifiedTime(path);
+        assertNotNull(lastModifiedTime);
     }
 
     @Test
